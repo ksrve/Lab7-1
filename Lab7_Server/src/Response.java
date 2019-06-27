@@ -31,7 +31,7 @@ public class Response implements Serializable {
             oos.flush();
             return baos.toByteArray();
         } catch (IOException e) {
-            System.err.println("Произошла ошибка при сериализации строки ответа");
+            System.err.println("An error occurred while serializing the response string");
         }
         return null;
     }
@@ -49,9 +49,9 @@ public class Response implements Serializable {
              ObjectInputStream ois = new ObjectInputStream(bais)){
             return ois.readObject();
         } catch (IOException e) {
-            System.err.println("Невозможно прочитать ответ сервера (Class Response, method readResponse)");
+            System.err.println("Unable to read server response");
         } catch (ClassNotFoundException e) {
-            System.err.println("Не найден класс");
+            System.err.println("Class not found");
         }
         return null;
     }

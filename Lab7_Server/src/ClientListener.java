@@ -26,7 +26,8 @@ public class ClientListener extends Thread {
             try {
                 this.channelBuffer.clear();
                 this.saddr = channel.receive(channelBuffer);
-                System.out.println("Получен запрос");
+                System.out.println("================");
+                System.out.println("Request received");
                 this.command = readSerializedCommand();
                 this.ready = true;
             } catch (IOException e) {
@@ -41,10 +42,10 @@ public class ClientListener extends Thread {
             return ois.readObject();
         } catch (IOException e) {
             e.printStackTrace();
-            System.err.println("Возникла ошибка при десеарелизации данных от последней команды");
+            System.err.println("An error occurred while de-digesting data from the last command");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-            System.err.println("Не найден класс");
+            System.err.println("Class not found");
         }
         return null;
     }

@@ -18,7 +18,7 @@ public class ClientResponder {
         try {
             channel.send(out, addr);
         } catch (IOException e) {
-            System.err.println("Возникла ошибка при отправлении пакета");
+            System.err.println("An error occurred while sending the package");
         }
     }
 
@@ -29,7 +29,7 @@ public class ClientResponder {
             oos.flush();
             return ByteBuffer.wrap(baos.toByteArray());
         } catch (IOException e) {
-            System.err.println("Произошла ошибка при сериализации ответа");
+            System.err.println("An error occurred while serializing the response");
         }
         return null;
     }

@@ -6,7 +6,7 @@ public class Command implements Serializable {
 
     private String token;
     private String command;
-    private byte[] data; // TODO: 2019-04-13
+    private byte[] data;
 
     public Command(String command, byte[] data) {
         this.command = command;

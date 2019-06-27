@@ -54,7 +54,7 @@ public class RandomString {
      * Create session identifiers.
      */
     public RandomString() {
-        this(32);
+        this(8);
     }
 
 }

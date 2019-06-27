@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
-import java.util.concurrent.CopyOnWriteArrayList;
+
 
 public class Loader {
     private Loader() {}
@@ -15,17 +15,16 @@ public class Loader {
         try {
             while (resultSet.next()) {
                 String name = resultSet.getString("name");
-                String skill = resultSet.getString("skill");
                 int coord = resultSet.getInt("coord");
-                int height = resultSet.getInt("height");
-                boolean beauty = resultSet.getBoolean("beauty");
-                String time = resultSet.getString("timeID");
+                String time = resultSet.getString("timeid");
                 String holder = resultSet.getString("holder");
-                Person person = new Person(name, skill, coord, height, beauty);
+                Person person = new Person(name,coord);
                 person.setHolder(holder);
                 person.setTimeID(LocalDateTime.parse(time));
 
                 humans.add(person);
+                System.out.println("Element: " + person);
+
             }
         } catch (Exception e) {
             System.err.println("Something go wrong while loading Database");
@@ -34,23 +33,28 @@ public class Loader {
     }
 
     public static Set<User> loadUsersFromDB() {
-        ResultSet resultSet = DataBase.makeRequest("SELECT * FROM users");
-        Set<User> users = new HashSet<User>();
+        ResultSet resultSet = DataBase.makeRequest("SELECT * FROM public.users");
+        HashSet<User> users = new HashSet<User>();
         try {
             while (resultSet.next()) {
                 try {
                     String login = resultSet.getString("login");
-                    String password = resultSet.getString("password");
                     String email = resultSet.getString("email");
+                    String password = resultSet.getString("password");
 
-                    User user = new User(email,login, password);
+                    User user = new User(login,email, password);
 
                     users.add(user);
+
+
                 } catch (SQLException e) {
 
                 }
             }
         } catch (Exception e) {
+        }
+        for (User i : users) {
+            System.out.println("User: " + i.getLogin());
 
         }
         return users;

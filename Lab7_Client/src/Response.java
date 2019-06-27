@@ -5,7 +5,7 @@ public class Response implements Serializable {
     private static long serialVersionUID = 1;
     private Status status;
     private ResponseType type;
-    private byte[] response; // SERIALIZED VALUE возможно переделать в String
+    private byte[] response;
 
     public Response(Status status, ResponseType type, byte[] response) {
         this.status = status;

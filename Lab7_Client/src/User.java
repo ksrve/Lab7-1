@@ -18,7 +18,7 @@ public class User implements Serializable {
     private int port;
     private String registerToken;
 
-    public User(String email, String login, String password) {
+    public User(String login, String email, String password) {
         this.email = email;
         this.login = login;
         this.password = password;

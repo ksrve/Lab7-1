@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public class User {
     private String email;
-    private static String login;
+    private String login;
     private String password;
     private String token;
     private LocalDateTime lastRequest;
@@ -12,9 +12,9 @@ public class User {
     private SocketAddress saddr;
     private SocketAddress infoSocket;
 
-    public User(String email, String login, String password) {
-        this.email = email;
+    public User(String login, String email, String password) {
         this.login = login;
+        this.email = email;
         this.password = password;
     }
 
@@ -30,7 +30,7 @@ public class User {
         this.email = email;
     }
 
-    public static String getLogin() {
+    public String getLogin() {
         return login;
     }
 

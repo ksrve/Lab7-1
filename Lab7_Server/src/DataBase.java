@@ -18,13 +18,13 @@ public class DataBase {
                 Class.forName("org.postgresql.Driver");
                 connection = DriverManager.getConnection(
                         "jdbc:postgresql://localhost:5432/Testbd", "postgres", "2319");
-                System.out.println("-- Connection with database is established");
+                System.out.println("Connection with database is established");
             } catch (Exception e) {
 
-                System.out.println("-- Не удалось установить соединение с базой данных");
+                System.err.println("Could not establish database connection");
             }
         } else {
-            System.out.println("-- Соединение с базой данных уже установлено");
+            System.out.println("Database connection already established");
         }
     }
 

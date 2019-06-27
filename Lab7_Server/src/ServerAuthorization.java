@@ -1,7 +1,7 @@
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
 import java.math.BigInteger;
 import java.net.SocketAddress;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -10,8 +10,13 @@ import java.util.Set;
 
 public class ServerAuthorization {
 
-    private static final byte[] salt = {33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 57, 59, 61, 63};
 
+    /**
+     * @param data
+     * @param authorizationTokens
+     * @param allUsers
+     * @return
+     */
     public static Response registerUser(String data, Map<String, LocalDateTime> authorizationTokens, Set<User> allUsers) {
         String[] dataArr = data.split(" ");
         String email        = dataArr[0];
@@ -20,8 +25,8 @@ public class ServerAuthorization {
         ResponseType type = ResponseType.PLANNED;
         Status status = Status.OK;
         for (User user : allUsers) {
-            if (user.getEmail().equals(email)) { status = Status.USER_EXIST; break; }
-            if (user.getLogin().equals(login)) { status = Status.USER_EXIST; break; }
+            if (user.getLogin().equals(login)) { status = Status.USER_EXIST; break;}
+            if (user.getEmail().equals(email)) { status = Status.USER_EXIST; break;}
         }
         RandomString rnd = new RandomString();
         String rndStr = rnd.nextString();
@@ -34,13 +39,20 @@ public class ServerAuthorization {
         }
 
         if (status == Status.OK) {
-            authorizationTokens.put(rndStr, LocalDateTime.now().plusMinutes(2).plusSeconds(30));
+            authorizationTokens.put(rndStr, LocalDateTime.now().plusMinutes(3).plusSeconds(30));
         }
 
         return new Response(status, type, rndStr);
 
     }
 
+    /**
+     * @param data
+     * @param activeUsers
+     * @param allUsers
+     * @param saddr
+     * @return
+     */
     public static Response loginUser(String data, Set<User> activeUsers, Set<User> allUsers, SocketAddress saddr) {
         String[] dataArr = data.split(" ");
         String login =      dataArr[0];
@@ -50,7 +62,10 @@ public class ServerAuthorization {
         User thisUser = null;
 
         for (User user : allUsers) {
-            if (user.getLogin().equals(login)) { status = Status.OK; thisUser = user; break; }
+            if (user.getLogin().toLowerCase().equals(login.toLowerCase())) {
+                status = Status.OK; thisUser = user;
+                break;
+            }
         }
 
         for (User user : activeUsers) {
@@ -60,8 +75,6 @@ public class ServerAuthorization {
                 System.out.println(user.getLogin());
             }
         }
-
-
         if (status == Status.OK && !password.equals(thisUser.getPassword())) {
             System.out.println(password + ":" + thisUser.getPassword());
             status = Status.WRONG_PASSWORD;
@@ -78,6 +91,12 @@ public class ServerAuthorization {
         return new Response(status, type, "");
     }
 
+    /**
+     * @param data
+     * @param authorizationTokens
+     * @param allUsers
+     * @return
+     */
     public static Response completeRegistration(String data, Map<String, LocalDateTime> authorizationTokens, Set<User> allUsers) {
         String[] dataArr = data.split(" ");
         String email =      dataArr[0];
@@ -91,48 +110,55 @@ public class ServerAuthorization {
         if (authorizationTokens.get(token).compareTo(LocalDateTime.now()) < 0) { status = Status.EXPIRED_TOKEN; }
 
         if (status == Status.OK) {
-            User user = new User(email, login, password);
+            User user = new User(login, email, password);
             allUsers.add(user);
-            String sql = "INSERT INTO users (login, password, email) VALUES (?, ?, ?)";
+            String sql = "INSERT INTO users (login, email, password) VALUES (?, ?, ?)";
             try {
                 PreparedStatement statement = DataBase.getConnection().prepareStatement(sql);
                 statement.setString(1, login);
-                statement.setString(2, password);
-                statement.setString(3, email);
+                statement.setString(2, email);
+                statement.setString(3, password);
                 statement.execute();
                 statement.close();
             } catch (SQLException e) {
-                System.err.println("ERROR: произошла ошибка при исполнении SQL запроса");
+                System.err.println("ERROR: an error occurred while executing the SQL query");
+                e.getErrorCode();
+                e.getMessage();
+                e.printStackTrace();
             }
         }
         return new Response(status, type, "");
     }
 
 
+    /**
+     * @param password
+     * @return
+     */
     private static String generateStrongPasswordHash(final String password) {
         try {
-            int iterations = 1000;
-            char[] chars = password.toCharArray();
+            // getInstance() method is called with algorithm SHA-224
+            MessageDigest md = MessageDigest.getInstance("SHA-224");
 
-            PBEKeySpec spec = new PBEKeySpec(chars, salt, iterations, 128);
-            SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-            byte[] hash = skf.generateSecret(spec).getEncoded();
-            return toHex(hash);
-        } catch (Exception e) {
+            // digest() method is called
+            // to calculate message digest of the input string
+            // returned as array of byte
+            byte[] messageDigest = md.digest(password.getBytes());
 
+            // Convert byte array into signum representation
+            BigInteger no = new BigInteger(1, messageDigest);
+
+            // Convert message digest into hex value
+            String hashtext = no.toString(16);
+
+            // Add preceding 0s to make it 32 bit
+            while (hashtext.length() < 32) {
+                hashtext = "0" + hashtext;
+            }
+            return hashtext;
+        } catch (NoSuchAlgorithmException e) {
             return null;
         }
     }
 
-    private static String toHex(byte[] array) {
-        BigInteger bi = new BigInteger(1, array);
-        String hex = bi.toString(16);
-        int paddingLength = (array.length * 2) - hex.length();
-        if(paddingLength > 0)
-        {
-            return String.format("%0"  +paddingLength + "d", 0) + hex;
-        }else{
-            return hex;
-        }
-    }
 }

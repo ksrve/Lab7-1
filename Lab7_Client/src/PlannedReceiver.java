@@ -12,9 +12,9 @@ public class PlannedReceiver {
     public PlannedReceiver(DatagramSocket socket, MessageSender sender) {
         this.socket = socket;
         try {
-            this.socket.setSoTimeout(1000);
+            this.socket.setSoTimeout(1000000000);
         } catch (SocketException e) {
-
+            System.out.println("SocketTime is too little");
         }
         this.sender = sender;
     }
@@ -29,7 +29,7 @@ public class PlannedReceiver {
             boolean connected = false;
 
             for (int i = 1; i < 11; i++) {
-                System.out.println("Попытка восстановить соединение №" + i);
+                System.out.println("Attempt to re-establish connectivity №" + i);
                 sender.sendCommand("connecting", "");
                 try {
                     socket.receive(dp);
@@ -40,14 +40,14 @@ public class PlannedReceiver {
                 }
             }
             if (connected) {
-                System.out.println("Соединение восстановлено");
+                System.out.println("Connection re-established");
                 return null;
             } else {
-                System.out.println("Соединение восстановить не удалось");
+                System.out.println("Connection wasn't re-established");
                 System.exit(0);
             }
         } catch (IOException e) {
-            System.err.println("Гавно");
+            System.err.println("Connection wasn't re-established:(. Sorry...");
         }
         return MessageReceiver.decodeResponseObject(dp.getData());
     }

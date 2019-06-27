@@ -1,6 +1,4 @@
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
@@ -42,7 +40,7 @@ public class EventListener {
     public void newEvent(String message) {
         System.out.println("Server: " + message);
         byte[] send = message.getBytes();
-        System.out.println(addresses.size());
+        //System.out.println(addresses.size());
         for (InetSocketAddress addr : addresses) {
             System.out.println("Addr2: " + addr);
             ByteBuffer buffer = ByteBuffer.allocate(256);
@@ -60,7 +58,7 @@ public class EventListener {
     public void checkUsersTimeout() {
         for (User user : users) {
             if (user.getLastRequest().compareTo(LocalDateTime.now()) < 0) {
-                newEvent(String.format("Пользователь %s вышел с сервера", user.getLogin()));
+                newEvent(String.format("User %s logged off from server", user.getLogin()));
             }
         }
     }

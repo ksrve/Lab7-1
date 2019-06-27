@@ -1,4 +1,3 @@
-import java.net.UnknownHostException;
 import java.util.Properties;
 import javax.mail.*;
 import javax.mail.internet.*;
@@ -6,43 +5,54 @@ import javax.mail.internet.*;
 public class SendEmail {
 
 
+
     public static Status send(String email, String registrationToken) {
 
         System.out.println("Sending the message to " + email);
-
-        final String SMTP_AUTH_EMAIL = "honey.kosareva@gmail.com"; // тот, кто отправляет
-        final String SMTP_AUTH_PWD = "180376as";
-        final String SMTP_SERVER = "smtp.gmail.com";
         //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        try{
-            Properties properties = new Properties();
-            properties.setProperty("mail.transport.protocol", "smtps");
-            properties.setProperty("mail.smtps.host", SMTP_SERVER);
-            properties.setProperty("mail.smtps.user", SMTP_AUTH_EMAIL);
+        try {
+            String host = "smtp.gmail.com";
+            String user = "honey.kosareva@gmail.com";
+            String pass = "180376as";
+            final Properties properties = new Properties();
 
-            Session session = Session.getDefaultInstance(properties);
+            properties.put("mail.smtp.host", host);
+            properties.put("mail.smtp.port", "587");
+            properties.put("mail.smtp.auth", "true");
+            properties.put("mail.smtp.starttls.enable", "true");
 
-            MimeMessage message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(SMTP_AUTH_EMAIL));
-            message.addRecipient(Message.RecipientType.TO,
-                    new InternetAddress(email));
-            message.setSubject("Registration on baaaad server");
-            message.setText("Hi, my dear friend \n" +
-                    "\nThis is your password \n" + registrationToken);
+            Authenticator auth = new Authenticator() {
+                @Override
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    return new PasswordAuthentication(user, pass);
+                }
+            };
 
-            Transport tr = session.getTransport();
-            tr.connect(SMTP_AUTH_EMAIL, SMTP_AUTH_PWD);
-            tr.sendMessage(message, message.getAllRecipients());
-            tr.close();
+            Session mailSession = Session.getInstance(properties, auth);
+
+
+            MimeMessage message = new MimeMessage(mailSession);
+
+            message.setFrom(new InternetAddress(user));
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress(email));
+            message.setSubject("Pass");
+            message.setText("Hi, dear user!"
+                    + "\nThis is your token: "
+                    + registrationToken
+                    + "\nCtrl+c and ctrl+v token in 'help me, i wanna die' program "
+                    + "\nHave a nice day;)" );
+
+            Transport.send(message);
+
 
             System.out.printf("Message to %s was sent successfully\n", email);
-            return Status.OK;
         } catch (MessagingException e) {
             System.err.println("Ooops! It might be a problem with e-mail");
             return Status.NO_MAIL;
         } catch (Exception e ){
             System.err.println();
             return Status.NO_MAIL;
-        }
+            
+        }return  Status.OK;
     }
 }

@@ -27,7 +27,46 @@ public class Client {
     public static String login;
     public static String password;
 
+    public static void main(String[] args) {
+        if (args.length != 2) {
+            showUsage();
+        }
+        Date date = new Date();
+        System.out.println(date);
 
+        try {
+            clientAddr = InetAddress.getByName(args[0]);
+            port = Integer.parseInt(args[1]);
+            InetAddress addr = InetAddress.getByName(args[0]);
+            int port = Integer.parseInt(args[1]);
+            Client client = new Client(addr, port);
+
+            System.out.println("---------------------------------------------");
+            System.out.println("Hi, dear User! This is 'help me, i wanna die' program!");
+            System.out.println("-Running UDP Client at " + InetAddress.getLocalHost());
+            System.out.println("-UDP connection to " + addr + " host");
+            System.out.println("-UDP port " + port);
+            System.out.println("-Client started");
+            System.out.println("---------------------------------------------");
+
+            client.connectToServer();
+            client.setToken(null);
+            boolean authorized = client.authorize();
+            while (!authorized && client.getToken() == null) {
+                authorized = client.authorize();
+            }
+            Thread f = new Thread(() -> {
+                client.finish();
+                System.out.println("See you later!");
+            });
+            Runtime.getRuntime().addShutdownHook(f);
+            client.start();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showUsage();
+        }
+    }
     private Client(InetAddress serverAddress, int port) {
         try {
             socket = new DatagramSocket();
@@ -62,7 +101,6 @@ public class Client {
         System.out.print(">> ");
         input_command = scanner.nextLine();
         String command = input_command.split(" ")[0];
-        System.out.println(command);
         ///////////////////////////////////////////////
         /*
         if (console == null) {
@@ -137,8 +175,8 @@ public class Client {
                 System.out.println("GoodBye!!! Hope I'll see you later, leather bastard");
                 System.exit(0);
             default:
-                System.err.println("Вы ввели неверную команду, попробуйте еще раз");
-                System.out.println("=====");
+                System.err.println("You enter incorrect command. Try again");
+                System.out.println("---------------------------------------------");
                 return false;
         }
     }
@@ -146,7 +184,7 @@ public class Client {
     private String register(String data) {
         String[] dataArr = data.split(" ");
         if (dataArr.length != 3) {
-            System.err.println("Вы использовали неверный синтаксис или пробелы, попробуйте снова");
+            System.err.println("You made a mistake in syntax. Try again");
             return null;
         }
         sender.sendCommand("register", data);
@@ -154,22 +192,24 @@ public class Client {
         if (response == null) {
             startAgain();
         }
-        System.out.println(response.getStatus());
+        System.out.println("Status " + response.getStatus());
         if (response.getStatus() == Status.OK) {
             String token = Response.getStringFromResponse(response.getResponse());
-            System.out.println("Вам на почту пришел 32-х значный токен, скопируйте его в строку ниже, чтобы подтвердить регистрацию\nБудьте внимательны, у вас всего 3 попытки");
+            System.out.println("\n" + "You received an 8-digit token" +
+                    "\ncopy it to the line below to confirm registration" +
+                    "\nBe careful, you have only 3 attempts and 3,5 minutes!!!");
             int attemptCounter = 0;
             while (attemptCounter < 3) {
-                System.out.print("Токен > ");
+                System.out.print("Token >>> ");
                 if (scanner.nextLine().trim().equals(token)) {
                     return token;
                 }
                 attemptCounter++;
             }
         } else if (response.getStatus() == Status.USER_EXIST) {
-            System.err.println("Пользователь с таким email или login уже существует\nПопробуйте еще раз\n");
+            System.err.println("User with this email or login already exists. Try again");
         } else if (response.getStatus() == Status.NO_MAIL) {
-            System.err.println("Некорректная почта, письмо для завершения регистрации не было доставлено\nПопробуйте еще раз\n");
+            System.err.println("Invalid mail, the letter to complete the registration was not delivered. Try again");
         }
         return null;
     }
@@ -181,13 +221,13 @@ public class Client {
             startAgain();
         }
         if (response.getStatus() == Status.OK) {
-            System.out.println("Вы зарегистрированы на сервере");
+            System.out.println("You are registered on the server");
             return true;
         } else if (response.getStatus() == Status.WRONG_TOKEN) {
-            System.err.println("Неверный токен\n\n");
+            System.err.println("Wrong token\n\n");
             return false;
         } else if (response.getStatus() == Status.EXPIRED_TOKEN) {
-            System.err.println("Токен просрочен, поторопитесь в следующий раз, он действует всего 2.5 минуты\n\n");
+            System.err.println("Expired token\n\n");
             return false;
         }
         return false;
@@ -196,7 +236,7 @@ public class Client {
     private String login(String data) {
         String[] dataArr = data.split(" ");
         if (dataArr.length != 2) {
-            System.err.println("Вы использовали неверный синтаксис или пробелы, попробуйте снова");
+            System.err.println("You made a mistake in syntax. Try again");
             return null;
         }
         // Получаем и обрабатываем запрос к серверу
@@ -208,11 +248,11 @@ public class Client {
         if (response.getStatus() == Status.OK) {
             return Response.getStringFromResponse(response.getResponse());
         } else if (response.getStatus() == Status.USER_IN_SYSTEM) {
-            System.err.println("Пользователь с таким login уже в системе\n\n");
+            System.err.println("A user with this login is already in the system\n\n");
         } else if (response.getStatus() == Status.WRONG_PASSWORD) {
-            System.err.println("Пароль неверен (Как и все, кто не верит в Аллаха)\n\n");
+            System.err.println("Password is wrong\n\n");
         } else if (response.getStatus() == Status.USER_NOT_FOUND) {
-            System.err.println("Пользователь с таким login не найден\n\n");
+            System.err.println("User with such login not found\n\n");
         }
 
         return null;
@@ -220,8 +260,7 @@ public class Client {
 
     private void start() {
         sender.sendCommandFromSpecificSocket(socket, token, "infosocket", "");
-        System.out.println("Если не знаете команд программы, введите help");
-        System.out.print("Введите команду > ");
+        System.out.print("\nEnter command >>> ");
         String lastCommand = "";
         String addStr = "";
         boolean commandEnd = true;
@@ -240,7 +279,7 @@ public class Client {
                         commandEnd = true;
                     }
 
-                    if (!commandEnd && (lastCommand.equals("add") || lastCommand.equals("add_if_min"))) {
+                    if (!commandEnd && (lastCommand.equals("add") || lastCommand.equals("add_if_min") || lastCommand.equals("remove"))) {
 
                         nestingJSON += charCounter(input, '{');
                         nestingJSON -= charCounter(input, '}');
@@ -250,7 +289,6 @@ public class Client {
                             commandEnd = true;
 
                         }
-
                     } else if (command.equals("add_if_min") && commandEnd) {
 
                         lastCommand = "add_if_min";
@@ -275,6 +313,18 @@ public class Client {
                             commandEnd = true;
                         }
 
+                    } else if (command.equals("remove") && commandEnd) {
+
+                        lastCommand = "remove";
+                        commandEnd = false;
+                        correctCommand = true;
+                        addStr = input.substring(6).trim();
+                        nestingJSON += charCounter(addStr, '{');
+                        nestingJSON -= charCounter(addStr, '}');
+                        if (nestingJSON == 0) {
+                            commandEnd = true;
+                        }
+
                     } else if (command.equals("show") && commandEnd) {
                         lastCommand = "show";
                         correctCommand = true;
@@ -286,30 +336,19 @@ public class Client {
                     } else if (command.equals("import") && commandEnd) {
                         lastCommand = "import";
                         correctCommand = true;
-                        if (!input.substring(6).trim().startsWith("/dev/random") && !input.substring(6).trim().startsWith("/dev/urandom")) {
-                            Vector<Person> humans = Toodles._import(input.substring(6).trim());
-                            if (humans == null) {
-                                System.err.println("Произошла ошибка при чтении файла");
-                                System.out.print("> ");
+                            Vector<Person> person = Toodles._import(input.substring(6).trim());
+                            if (person == null) {
+                                System.err.println("\nError while trying to read file");
+                                System.out.print("Enter command >>> ");
                                 input = scanner.nextLine();
                                 continue;
                             } else {
-                                sender.sendCommand(token, "import", humans);
+                                sender.sendCommand(token, "import", person);
                             }
-                        } else {
-                            System.err.println("Плохой файл, а-та-та");
-                            System.out.print("> ");
-                            input = scanner.nextLine();
-                            continue;
-                        }
                     } else if (command.equals("info") && commandEnd) {
                         lastCommand = "info";
                         correctCommand = true;
                         sender.sendCommand(token, "info", "");
-                    } else if (command.equals("remove") && commandEnd) {
-                        lastCommand = "remove";
-                        correctCommand = true;
-                        sender.sendCommand(token, "remove", input.substring(6).trim());
                     } else if (command.equals("help") && commandEnd) {
                         lastCommand = "help";
                         correctCommand = true;
@@ -326,7 +365,7 @@ public class Client {
                             addStr = "";
                             correctCommand = true;
                         } else {
-                            System.err.println("Произошла ошибка при чтении JSON строки");
+                            System.err.println("\nAn error occurred while reading the JSON string");
                             correctCommand = false;
                         }
                     } else if (lastCommand.equals("add_if_min") && commandEnd && correctCommand) {
@@ -336,10 +375,19 @@ public class Client {
                             addStr = "";
                             correctCommand = true;
                         } else {
-                            System.err.println("Произошла ошибка при чтении JSON строки");
+                            System.err.println("\nAn error occurred while reading the JSON string");
                             correctCommand = false;
                         }
-
+                    } else if (lastCommand.equals("remove") && commandEnd && correctCommand) {
+                        Person human = Toodles.fromJson(addStr);
+                        if (human != null) {
+                            sender.sendCommand(token, "remove", Toodles.fromJson(addStr));
+                            addStr = "";
+                            correctCommand = true;
+                        } else {
+                            System.err.println("\nAn error occurred while reading the JSON string");
+                            correctCommand = false;
+                        }
                     }
                 } else {
                     if (commandEnd)
@@ -349,7 +397,7 @@ public class Client {
                 if (commandEnd && correctCommand) {
                     Response response = plannedReceiver.listenServer();
                     if (response == null) {
-                        System.err.println("Произошло отключение от сервера, между выполнениями команд");
+                        System.err.println("Disconnected from server, between command execution");
                         startAgain();
                         return;
                     } else {
@@ -358,13 +406,14 @@ public class Client {
                         String serverResponse = Response.getStringFromResponse(response.getResponse());
                         System.out.println(serverResponse);
                     }
-                    System.out.print("> ");
+                    System.out.print("Enter command >>> ");
                 } else if (commandEnd) {
                     if (!input.trim().equals("")) {
-                        System.err.println("Неизвестная команда");
+                        System.err.println("Unknown command");
                     }
-                    System.out.print("> ");
+                    System.out.print("Enter command >>> ");
                 }
+
                 input = scanner.nextLine();
             }
         } catch (Exception e) {
@@ -408,52 +457,7 @@ public class Client {
         this.token = token;
     }
 
-    public static void main(String[] args) {
-        if (args.length != 2) {
-            showUsage();
-        }
-        Date date = new Date();
-        System.out.println(date);
 
-        try {
-            clientAddr = InetAddress.getByName(args[0]);
-            port = Integer.parseInt(args[1]);
-            InetAddress addr = InetAddress.getByName(args[0]);
-            int port = Integer.parseInt(args[1]);
-            Client client = new Client(addr, port);
-
-            System.out.println("---------------------------------------------");
-            System.out.println("Hi, dear User! This is Server-Client program!");
-            System.out.println("-Running UDP Client at " + InetAddress.getLocalHost());
-            System.out.println("-UDP client settings --");
-            System.out.println("-UDP connection to " + addr + " host");
-            System.out.println("-UDP port " + port);
-            System.out.println("-Client started");
-            System.out.println("---------------------------------------------");
-            /*
-            0 - подключение к серверу
-            1 - авторизация
-            2 - команды
-            3 - конец программы (отправляем на сервер то, что мы отключаемся)
-             */
-            client.connectToServer();
-            client.setToken(null);
-            boolean authorized = client.authorize();
-            while (!authorized && client.getToken() == null) {
-                authorized = client.authorize();
-            }
-            Thread f = new Thread(() -> {
-                client.finish();
-                System.out.println("Пока-пока");
-            });
-            Runtime.getRuntime().addShutdownHook(f);
-            client.start();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            showUsage();
-        }
-    }
 
     public static void startAgain() {
         Client client = new Client(clientAddr, port);
@@ -470,9 +474,4 @@ public class Client {
         client.start();
     }
 
-
-
-    public Scanner getScanner() {
-        return scanner;
-    }
 }

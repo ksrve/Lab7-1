@@ -9,30 +9,21 @@ public class Person implements Comparable <Person>, Serializable {
 	 * Object identifiers
 	 */
 	private String name;
-	private String skill;
 	private int coord;
-	private int height;
-	private boolean beauty;
-	private LocalDateTime time;
+	private LocalDateTime timeid;
 	private String holder;
 	/**
 	 * Constructor that creates an object with the specified parameters
 	 */
-	public Person(String name, String skill, int coord, int height, boolean beauty){
+	public Person(String name, int coord){
 		this.name = name;
-		this.skill = skill;
 		this.coord = coord;
-		this.height = height;
-		this.beauty = beauty;
-		this.time = LocalDateTime.now();
+		this.timeid = LocalDateTime.now();
 	}
 	public Person(){
 		this.name = name;
-		this.skill = skill;
 		this.coord = coord;
-		this.beauty = beauty;
-		this.height = height;
-		this.time = LocalDateTime.now();
+		this.timeid = LocalDateTime.now();
 	}
 	/**
 	 * method by which a person makes a sound
@@ -45,12 +36,6 @@ public class Person implements Comparable <Person>, Serializable {
 		this.name = name;
 	}
 
-	public String getSkill() {
-		return skill;
-	}
-	public void setSkill(String skill) {
-		this.skill = skill;
-	}
 
 	public int getCoord() {
 		return coord;
@@ -59,22 +44,8 @@ public class Person implements Comparable <Person>, Serializable {
 		this.coord = coord;
 	}
 
-	public boolean getBeauty() {
-		return beauty;
-	}
-	public void setBeauty(boolean beauty) {
-		this.beauty = beauty;
-	}
-
-	public int getHeight() {
-		return height;
-	}
-	public void setHeight(int height) {
-		this.height = height;
-	}
-
-	public LocalDateTime getTimeID() { return time; }
-	public void setTimeID(LocalDateTime timeID) { this.time = timeID; }
+	public LocalDateTime getTimeID() { return timeid; }
+	public void setTimeID(LocalDateTime timeID) { this.timeid = timeID; }
 
 	public String getHolder() { return holder; }
 
@@ -83,18 +54,15 @@ public class Person implements Comparable <Person>, Serializable {
 
 	@Override
 	public String toString() {
-		return "{ owner:" + this.holder
+		return "{ owner: " + this.holder
 				+ "; name: " + this.name
-				+ "; skill: " + this.skill
 				+ "; coord: " + this.coord
-				+ "; height: " + this.height
-				+ "; beauty: " + this.beauty
-				+ "; timeOfCreation: "  + (time.getDayOfMonth()
-				+ "/" + time.getMonth()
-				+ "/" + time.getYear()
-				+ " " + time.getHour()
-				+ ":" + time.getMinute()
-				+ ":" + time.getSecond())
+				+ "; timeID: "  + (timeid.getDayOfMonth()
+				+ "/" + timeid.getMonth()
+				+ "/" + timeid.getYear()
+				+ " " + timeid.getHour()
+				+ ":" + timeid.getMinute()
+				+ ":" + timeid.getSecond())
 				+ "; }";
 	}
 
@@ -105,7 +73,7 @@ public class Person implements Comparable <Person>, Serializable {
 	@Override
 	public int hashCode() {
 		int result = name.hashCode();
-		result = result + coord + height ;
+		result = result + coord;
 		return result;
 	}
 
@@ -117,11 +85,8 @@ public class Person implements Comparable <Person>, Serializable {
 		Person person = (Person) o;
 
 		if (!name.equals(person.name)) return false;
-		if (!skill.equals(person.skill)) return false;
 		if (coord != person.coord) return false;
-		if (beauty!= person.beauty) return false;
-		if (height!= person.height) return false;
-		if (!time.equals(person.time)) return false;
+		if (!timeid.equals(person.timeid)) return false;
 		return true;
 	}
 

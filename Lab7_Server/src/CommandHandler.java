@@ -108,27 +108,23 @@ public class CommandHandler extends Thread {
 
 
         for (Person current: storage) {
-            if (current.getName().toLowerCase().equals(personal.getName().toLowerCase())) {
+            if (current.equals(personal)) {
                 exist = true;
                 break;
             }
         }
         if (!exist) {
             try {
-                personal.setHolder(User.getLogin());
+                personal.setHolder(user.getLogin());
                 storage.add(personal);
                 sort(storage);
                 String sql;
-                //sql = "INSERT INTO collection (name, age, tall, charism, headdiametr, x, y, timeid, owner, hat_diametr, hat_height, hat_hattype, cloth, speed, fear) VALUES (?, ?, ?, ? ,? ,? ,? ,? ,? ,? , ?, ?, ?, ?, ?)";
-                sql = "INSERT INTO collection ( name, skill, coord, height, beauty, timeid, holder) VALUES (?, ?, ?, ? ,? ,? ,?)";
+                sql = "INSERT INTO collection ( name, coord, timeid, holder) VALUES (?, ?, ?, ? )";
                 PreparedStatement statement = DataBase.getConnection().prepareStatement(sql);
                 statement.setString(1, personal.getName());
-                statement.setString(2, personal.getSkill());
-                statement.setInt(3, personal.getCoord());
-                statement.setInt(4, personal.getHeight());
-                statement.setBoolean(5, personal.getBeauty());
-                statement.setString(6, personal.getTimeID().toString());
-                statement.setString(7, personal.getHolder());
+                statement.setInt(2, personal.getCoord());
+                statement.setString(3, personal.getTimeID().toString());
+                statement.setString(4, personal.getHolder());
                 statement.execute();
                 statement.close();
             } catch (NullPointerException e) {
@@ -191,10 +187,9 @@ public class CommandHandler extends Thread {
                 "\n exit - end the program " +
                 "\n save - save current content of the collection " +
                 "\n info - show you info about collection " +
-                "\n clear - remove collection " +
-                "\n add { name: ???; skill: ???; coordinates: ???; date of birth: ???; height: ???; } - add the element in collection " +
-                "\n remove { name: ???; skill: ???; coordinates: ???; date of birth: ???; height: ???; } - remove the collections element " +
-                "\n add_if_min { name: ???; skill: ???; coordinates: ???; date of birth: ???; height: ???; } - add the element in collection if it's value is less than the smallest element of this collection " +
+                "\n add { name: ???; coord: ???; } - add the element in collection " +
+                "\n remove { name: ???; coord: ???; } - remove the collection's element with given name " +
+                "\n add_if_min { name: ???; coord: ???; } - add the element in collection if it's value is less than the smallest element of this collection " +
                 "\n----------------------------");
     }
     //========================================================================
@@ -235,8 +230,6 @@ public class CommandHandler extends Thread {
      */
     private static void sort (Vector <Person> storage) {
         storage.stream().sorted();
-        //Collections.sort(concurrent_collection);
-        //Collections.reverse(concurrent_collection);
     }
     //========================================================================
     /**
@@ -248,7 +241,7 @@ public class CommandHandler extends Thread {
     protected  String add_if_min (Vector <Person> storage, Person personal, User user){
 
         if (storage.size() > 0) {
-            Person min = (Person) storage.stream().min(Comparator.comparing(Person::getName)).get();
+            Person min = storage.stream().min(Comparator.comparing(Person::getName)).get();
             if (personal.compareTo(min) < 0) {
                 return add(storage,personal, user);
             } else {

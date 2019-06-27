@@ -36,7 +36,7 @@ public class EventListener extends Thread {
         try {
             while (true) {
                 long thisTime = System.currentTimeMillis();
-                byte[] d = new byte[256];
+                byte[] d = new byte[10000];
                 DatagramPacket dp = new DatagramPacket(d, d.length, addr, port);
                 sendFuckingPacket(dp);
                 DatagramPacket data = new DatagramPacket(d, d.length);
@@ -48,7 +48,7 @@ public class EventListener extends Thread {
                 }
                 ds.receive(data);
                 System.out.println(new String(data.getData()).trim());
-                System.out.print("> ");
+                System.out.print(">>> ");
             }
         } catch (Exception e) {
 

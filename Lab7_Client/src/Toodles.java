@@ -1,18 +1,11 @@
-
-
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Toodles {
-    public static String name;
-    public static boolean[] ifFull = new boolean[5];
-    public static String skill;
-    public static String coord;
-    public static String DateOfBirth;
-    public static String height;
-    static boolean g;
-    static boolean  isKateSleeping = true;
+
+    public static boolean[] ifFull = new boolean[2];
+
 
     public static Vector<Person> _import(String path) {
         File file = new File(path);
@@ -27,28 +20,22 @@ public class Toodles {
         try {
 
             String s = n;
-            s = s.substring(s.indexOf("{") + 1, s.indexOf(" }"));
+            s = s.substring(s.indexOf("{") + 2, s.indexOf(" }"));
             String name = s.substring(s.indexOf("name: ") + 6, s.indexOf(";"));
             s = s.substring(s.indexOf("; ") + 2);
-            String skill = s.substring(s.indexOf("skill: ") + 7, s.indexOf("; "));
-            s = s.substring(s.indexOf("; ") + 2);
-            int coord = Integer.parseInt(s.substring(s.indexOf("coord: ") + 13, s.indexOf("; ")));
-            s = s.substring(s.indexOf("; ") + 2);
-            int height = Integer.parseInt(s.substring(s.indexOf("height: ") + 8, s.indexOf(";")));
-            s = s.substring(s.indexOf(";") + 2);
-            boolean beauty = Boolean.parseBoolean(s.substring(s.indexOf("beauty: ") + 15, s.indexOf("; ")));
+            int coord = Integer.parseInt(s.substring(s.indexOf("coord: ") + 7, s.indexOf(";")));
             s = s.substring(s.indexOf("; ") + 1);
 
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 2; i++) {
                 ifFull[i] = true;
             }
-            return new Person(name, skill, coord, height, beauty);
+            return new Person(name,coord);
 
         } catch (StringIndexOutOfBoundsException ex) {
-            System.err.println("Error while insert");
+            System.err.println("Error in JSON string");
             return null;
         } catch (NumberFormatException ex) {
-            System.err.println("Error while loading collection from file");
+            System.err.println("Error in JSON string");
             return null;
         }
     }
@@ -100,13 +87,13 @@ public class Toodles {
      * @param file - файла загрузки
      * @return - возвращает массив строк, содержащих параметры элементов в формате csv
      */
-    public static ArrayList<String> readStrings(File file) {
+    public static Vector<String> readStrings(File file) {
 
         try {
             BufferedReader reader = new BufferedReader(new FileReader(file));
             String line = "";
             if (file.exists()) {
-                ArrayList<String> str = new ArrayList<String>();
+                Vector<String> str = new Vector<String>();
                 while ((line = reader.readLine()) != null) {
                     str.add(line);
                 }
@@ -130,16 +117,15 @@ public class Toodles {
      * @param string - массив строк
      * @return - коллекция объектов
      */
-    public static Vector<Person> parseStrings(ArrayList<String> string) {
+    public static Vector<Person> parseStrings(Vector<String> string) {
 
         try {
-            ArrayList<Person> collect = new ArrayList<Person>();
-            List<Person> collection= new CopyOnWriteArrayList<Person>(collect);
+            Vector<Person> collection = new Vector<Person>();
             if (string != null) {
                 for (int j = 0; j < string.size(); j++) {
                     String currentString = string.get(j);
                     ArrayDeque<Integer> punctuation = new ArrayDeque<Integer>();
-                    boolean[] ifFull = new boolean[5];
+                    boolean[] ifFull = new boolean[2];
                     Arrays.fill(ifFull, Boolean.FALSE);
 
                     for (int i = 0; i < currentString.length(); i++) {
@@ -154,7 +140,7 @@ public class Toodles {
                             case (0):
                                 parameters[i] = currentString.substring(0, punctuation.getFirst().intValue());
                                 break;
-                            case (4):
+                            case (1):
                                 if (currentString.length() - 1 > punctuation.getFirst())
                                     parameters[i] = currentString.substring(punctuation.pollFirst().intValue() + 1, currentString.length());
                                 break;
@@ -169,12 +155,9 @@ public class Toodles {
                     }
                     try {
                         String name = parameters[0];
-                        String skill = parameters[1];
-                        int coord = Integer.parseInt(parameters[2]);
-                        int height = Integer.parseInt(parameters[3]);
-                        boolean beauty = Boolean.parseBoolean(parameters[4]);
+                        int coord = Integer.parseInt(parameters[1]);
 
-                        collection.add(Integer.valueOf(j), new Person(name,skill,coord,height,beauty));
+                        collection.add(Integer.valueOf(j), new Person(name,coord));
 
                     } catch (NumberFormatException ex) {
                         System.err.println("Incorrect paramaters in csv file");
@@ -187,7 +170,8 @@ public class Toodles {
             }
 
         } catch (Exception e) {
-            System.out.println("Incorrect paramaters in csv file");
+            System.err.println("Incorrect paramaters in csv file");
+            e.printStackTrace();
             return null;
         }
     }
